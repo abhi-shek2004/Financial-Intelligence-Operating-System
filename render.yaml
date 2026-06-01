@@ -3,7 +3,7 @@ services:
     name: fios-api-gateway
     env: docker
     dockerfilePath: ./Dockerfile
-    plan: standard
+    plan: free
     numInstances: 1
     envVars:
       - key: DATABASE_URL
@@ -23,5 +23,5 @@ services:
   
 databases:
   - name: fios-postgres
-    plan: standard
+    plan: free
     postgresMajorVersion: 15
