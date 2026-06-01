@@ -8,6 +8,7 @@ import json
 import uuid
 import logging
 import random
+import socket
 from datetime import datetime, timedelta
 
 logger = logging.getLogger("fios.gateway")
@@ -17,14 +18,26 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelna
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
 
+# ── Kafka Reachability Check ────────────────────────────────────────────────
+def is_kafka_reachable(bootstrap: str) -> bool:
+    host, port = bootstrap.split(":") if ":" in bootstrap else (bootstrap, 9092)
+    try:
+        with socket.create_connection((host, int(port)), timeout=1.0):
+            return True
+    except OSError:
+        return False
+
 # ── Kafka Producer (Graceful Degradation) ────────────────────────────────────
 kafka_producer = None
-try:
-    from confluent_kafka import Producer
-    kafka_producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP})
-    logger.info("Kafka Producer connected to %s", KAFKA_BOOTSTRAP)
-except Exception as e:
-    logger.warning("Kafka unavailable (%s). Running in standalone mode.", e)
+if is_kafka_reachable(KAFKA_BOOTSTRAP):
+    try:
+        from confluent_kafka import Producer
+        kafka_producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP, "message.timeout.ms": 3000})
+        logger.info("Kafka Producer connected to %s", KAFKA_BOOTSTRAP)
+    except Exception as e:
+        logger.warning("Kafka unavailable (%s). Running in standalone mode.", e)
+else:
+    logger.warning("Kafka broker at %s is unreachable. Running in standalone mode.", KAFKA_BOOTSTRAP)
 
 # ── AIOKafka import (optional) ───────────────────────────────────────────────
 try:
@@ -37,6 +50,7 @@ except ImportError:
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from apps.intelligence_api.main import app as intelligence_app
 from apps.retrieval_api.main import app as retrieval_app
+from packages.security.auth import create_access_token
 
 # ── Main Gateway Application ────────────────────────────────────────────────
 gateway_app = FastAPI(title="FIOS API Gateway", version="2.0.0")
@@ -150,6 +164,19 @@ async def get_historical_market_data(ticker: str = "AAPL", days: int = 100):
 
     return {"ticker": ticker, "data": data}
 
+# ── Auth & Security Endpoints ────────────────────────────────────────────────
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@gateway_app.post("/api/v1/auth/login")
+async def login(req: LoginRequest):
+    """Temporary auth gateway. Validates hardcoded admin and returns JWT."""
+    if req.username == "admin" and req.password == "password":
+        token = create_access_token({"sub": req.username, "role": "admin"})
+        return {"access_token": token, "token_type": "bearer"}
+    return {"status": "error", "message": "Invalid credentials", "access_token": None}
+
 # ── Trigger Endpoints ────────────────────────────────────────────────────────
 class TriggerRequest(BaseModel):
     ticker: str
@@ -160,9 +187,13 @@ async def trigger_research(req: TriggerRequest):
     job_id = str(uuid.uuid4())
     if kafka_producer:
         payload = json.dumps({"action": "deep_research", "ticker": req.ticker, "job_id": job_id})
-        kafka_producer.produce("fios.commands", payload.encode("utf-8"))
-        kafka_producer.flush()
-        logger.info("Research job %s dispatched to Kafka for %s", job_id, req.ticker)
+        try:
+            kafka_producer.produce("fios.commands", payload.encode("utf-8"))
+            kafka_producer.flush(timeout=2.0)
+            logger.info("Research job %s dispatched to Kafka for %s", job_id, req.ticker)
+        except Exception as e:
+            logger.error("Failed to produce to Kafka: %s", e)
+            return {"status": "error", "message": "Failed to connect to Kafka"}
     else:
         logger.info("Research job %s queued locally for %s (Kafka offline)", job_id, req.ticker)
     return {"status": "success", "message": f"Deep research initiated for {req.ticker}", "agent_job_id": job_id}
@@ -173,9 +204,13 @@ async def trigger_stress_test(req: TriggerRequest):
     job_id = str(uuid.uuid4())
     if kafka_producer:
         payload = json.dumps({"action": "stress_test", "ticker": req.ticker, "job_id": job_id})
-        kafka_producer.produce("fios.commands", payload.encode("utf-8"))
-        kafka_producer.flush()
-        logger.info("Stress test job %s dispatched to Kafka for %s", job_id, req.ticker)
+        try:
+            kafka_producer.produce("fios.commands", payload.encode("utf-8"))
+            kafka_producer.flush(timeout=2.0)
+            logger.info("Stress test job %s dispatched to Kafka for %s", job_id, req.ticker)
+        except Exception as e:
+            logger.error("Failed to produce to Kafka: %s", e)
+            return {"status": "error", "message": "Failed to connect to Kafka"}
     else:
         logger.info("Stress test job %s queued locally for %s (Kafka offline)", job_id, req.ticker)
     return {"status": "success", "message": f"Macro stress test initiated for {req.ticker}", "agent_job_id": job_id}
