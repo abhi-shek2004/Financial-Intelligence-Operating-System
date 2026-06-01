@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Cpu_icon.svg/1024px-Cpu_icon.svg.png" width="100" alt="FIOS Logo">
+  <img src="assets/logo.png" width="250" alt="FIOS Logo">
   
   # 🏛️ FIOS: Financial Intelligence Operating System
   
-  **Institutional-Grade Multi-Agent AI Platform for Quantitative Finance**
+  **[Live Demo / Website](https://ada83f4d2e2632.lhr.life)** | **Institutional-Grade Multi-Agent AI Platform for Quantitative Finance**
 
   <p align="center">
     <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js"></a>
