@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import GlassPanel from '@/components/ui/GlassPanel';
-import { Search, Database, Bot, Send, Loader2 } from 'lucide-react';
+import { Search, Database, Bot, Send, Loader2, FileText } from 'lucide-react';
 
 export default function ResearchPage() {
   const [ticker, setTicker] = useState("");
