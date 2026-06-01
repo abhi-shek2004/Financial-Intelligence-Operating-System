@@ -91,11 +91,11 @@ export default function Home() {
         </div>
 
         {/* Right Column: Agent Stream & Command Center */}
-        <div className="h-full flex flex-col space-y-4">
-          <div className="flex-[2]">
+        <div className="h-full flex flex-col space-y-4 min-h-0">
+          <div className="flex-[2] min-h-0">
             <AgentChatStream />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-h-0">
             <CommandCenter />
           </div>
         </div>

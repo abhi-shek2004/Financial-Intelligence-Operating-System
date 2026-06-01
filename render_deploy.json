@@ -1,0 +1,19 @@
+{
+  "type": "web_service",
+  "name": "fios-api-gateway",
+  "ownerId": "tea-d8es6tvavr4c7393ei40",
+  "repo": "https://github.com/abhi-shek2004/Financial-Intelligence-Operating-System",
+  "autoDeploy": "yes",
+  "branch": "main",
+  "env": "docker",
+  "serviceDetails": {
+    "plan": "free",
+    "runtime": "docker",
+    "envSpecificDetails": {
+      "dockerfilePath": "./Dockerfile"
+    },
+    "envVars": [
+      { "key": "CORS_ORIGINS", "value": "https://web-khaki-beta-57.vercel.app,http://localhost:3000" }
+    ]
+  }
+}

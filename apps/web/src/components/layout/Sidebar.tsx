@@ -26,20 +26,8 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div className="flex flex-col items-center lg:items-start lg:px-6 space-y-4">
+      <div className="flex flex-col items-center lg:items-start lg:px-6">
         <NavItem href="/settings" icon={<Settings />} label="Settings" active={pathname === "/settings"} />
-        <button 
-          onClick={() => {
-            localStorage.removeItem('fios_token');
-            window.location.href = '/login';
-          }}
-          className="flex items-center space-x-4 p-3 w-full rounded-xl transition-all duration-300 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span className="hidden lg:block font-medium">Logout</span>
-        </button>
       </div>
     </aside>
   );

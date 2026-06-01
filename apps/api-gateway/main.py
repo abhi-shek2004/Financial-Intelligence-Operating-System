@@ -50,7 +50,6 @@ except ImportError:
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from apps.intelligence_api.main import app as intelligence_app
 from apps.retrieval_api.main import app as retrieval_app
-from packages.security.auth import create_access_token
 
 # ── Main Gateway Application ────────────────────────────────────────────────
 gateway_app = FastAPI(title="FIOS API Gateway", version="2.0.0")
@@ -163,19 +162,6 @@ async def get_historical_market_data(ticker: str = "AAPL", days: int = 100):
         current_price = close_price
 
     return {"ticker": ticker, "data": data}
-
-# ── Auth & Security Endpoints ────────────────────────────────────────────────
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-@gateway_app.post("/api/v1/auth/login")
-async def login(req: LoginRequest):
-    """Temporary auth gateway. Validates hardcoded admin and returns JWT."""
-    if req.username == "admin" and req.password == "password":
-        token = create_access_token({"sub": req.username, "role": "admin"})
-        return {"access_token": token, "token_type": "bearer"}
-    return {"status": "error", "message": "Invalid credentials", "access_token": None}
 
 # ── Trigger Endpoints ────────────────────────────────────────────────────────
 class TriggerRequest(BaseModel):
