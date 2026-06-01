@@ -10,12 +10,16 @@ services:
         fromDatabase:
           name: fios-postgres
           property: connectionString
-      - key: REDIS_URL
-        value: redis://red-xxxxx:6379
-      - key: OPENAI_API_KEY
-        sync: false # Requires manual entry in the dashboard
+      - key: CORS_ORIGINS
+        value: https://web-khaki-beta-57.vercel.app,http://localhost:3000
+      - key: REDIS_HOST
+        value: localhost
+      - key: QDRANT_HOST
+        value: localhost
       - key: KAFKA_BOOTSTRAP_SERVERS
-        value: # Will connect to Confluent Cloud later
+        value: localhost:9092
+      - key: OPENAI_API_KEY
+        sync: false
   
 databases:
   - name: fios-postgres
